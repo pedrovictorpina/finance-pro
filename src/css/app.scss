@@ -1,126 +1,227 @@
 // app global css in SCSS form
 
-// Estilos globais para modo escuro
+// Dark mode styles
 body.body--dark {
-  background-color: #121212;
-  color: #ffffff;
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
 }
 
-// Transições suaves para mudança de tema
-* {
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-// Melhorar contraste em modo escuro
 .body--dark .q-card {
-  background-color: #1e1e1e;
-  color: #ffffff;
-  border: 1px solid #333;
+  background-color: #2d2d2d !important;
+  color: #ffffff !important;
 }
 
 .body--dark .q-input {
   color: #ffffff !important;
 }
 
-.body--dark .q-field__control {
-  color: #ffffff !important;
-  background-color: #2a2a2a !important;
-}
-
-.body--dark .q-field__label {
-  color: #b0b0b0 !important;
-}
-
-.body--dark .q-field__control:before {
-  border-color: #555 !important;
-}
-
-.body--dark .q-field__control:after {
-  border-color: #bb86fc !important;
-}
-
-// Inputs específicos para login/signup
-.body--dark .custom-input .q-field__control {
-  background-color: #2a2a2a !important;
+.body--dark .q-input .q-field__control {
+  background-color: #3d3d3d !important;
   color: #ffffff !important;
 }
 
-.body--dark .custom-input input {
+.body--dark .q-input .q-field__native {
   color: #ffffff !important;
 }
 
-// Páginas de login e cadastro em modo escuro
-.body--dark .login-page,
-.body--dark .signup-page {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+.body--dark .q-input .q-field__label {
+  color: #cccccc !important;
 }
 
-.body--dark .login-card,
-.body--dark .signup-card {
-  background-color: #1e1e1e !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-}
-
-// Forçar estilos específicos para login em modo escuro
-.body--dark .login-container {
-  color: #ffffff !important;
-}
-
-.body--dark .login-container .text-h3 {
-  color: #ffffff !important;
-}
-
-.body--dark .login-container .text-subtitle1 {
-  color: #b0b0b0 !important;
-}
-
-.body--dark .login-container .text-h5 {
-  color: #ffffff !important;
-}
-
-// Botões em modo escuro
 .body--dark .q-btn {
-  color: #ffffff;
-}
-
-.body--dark .q-btn.bg-primary {
-  background-color: #bb86fc !important;
-}
-
-// Links em modo escuro
-.body--dark .text-primary {
-  color: #bb86fc !important;
-}
-
-.body--dark a {
-  color: #bb86fc !important;
-}
-
-// Ícones em modo escuro
-.body--dark .q-icon {
   color: #ffffff !important;
 }
 
-// Checkbox em modo escuro
 .body--dark .q-checkbox {
   color: #ffffff !important;
 }
 
-.body--dark .q-checkbox__label {
+// Dark mode styles for drawer
+.body--dark .q-drawer {
+  background-color: #2d2d2d !important;
+  border-right: 1px solid #444444 !important;
+}
+
+.body--dark .q-item {
   color: #ffffff !important;
 }
 
-.body--dark .q-checkbox__inner {
-  color: #bb86fc !important;
+.body--dark .q-item__label {
+  color: #ffffff !important;
 }
 
-// Texto em modo escuro
+.body--dark .q-separator {
+  background-color: #444444 !important;
+}
+
+.body--dark .q-icon {
+  color: #cccccc !important;
+}
+
+.body--dark .q-item--active {
+  background-color: #1976d2 !important;
+  color: #ffffff !important;
+}
+
+.body--dark .q-header {
+  background-color: #2d2d2d !important;
+  border-bottom: 1px solid #444444 !important;
+}
+
+// Dark mode styles for user container in drawer
+.body--dark .q-drawer .user-container {
+  background: linear-gradient(135deg, #2d2d2d 0%, #3d3d3d 100%) !important;
+}
+
+.body--dark .q-drawer .text-h6 {
+  color: #ffffff !important;
+}
+
+.body--dark .q-drawer .text-caption {
+  color: #cccccc !important;
+}
+
+.body--dark .q-drawer .q-avatar {
+  background-color: #1976d2 !important;
+  color: #ffffff !important;
+}
+
+// Dark mode styles for Dashboard page
+.body--dark .q-page {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+}
+
 .body--dark .text-grey-8 {
   color: #ffffff !important;
 }
 
 .body--dark .text-grey-6 {
-  color: #b0b0b0 !important;
+  color: #cccccc !important;
+}
+
+.body--dark .text-grey-5 {
+  color: #aaaaaa !important;
+}
+
+.body--dark .chart-card {
+  background-color: #2d2d2d !important;
+  color: #ffffff !important;
+}
+
+.body--dark .stats-card {
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1) !important;
+}
+
+.body--dark .chart-card {
+  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.08) !important;
+}
+
+// Dark mode styles for Login and Signup pages
+.body--dark .login-page,
+.body--dark .signup-page {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+}
+
+.body--dark .login-card,
+.body--dark .signup-card {
+  background: rgba(45, 45, 45, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+}
+
+.body--dark .logo-container {
+  background: rgba(45, 45, 45, 0.3) !important;
+}
+
+.body--dark .custom-input .q-field__control {
+  background: rgba(61, 61, 61, 0.9) !important;
+  border: 1px solid #555555 !important;
+}
+
+.body--dark .custom-input.q-field--focused .q-field__control {
+  background: #3d3d3d !important;
+  box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.4) !important;
+}
+
+// Dark mode styles for ErrorNotFound page
+.body--dark .bg-blue {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+}
+
+// Dark mode styles for text colors
+.body--dark .text-positive {
+  color: #4caf50 !important;
+}
+
+.body--dark .text-negative {
+  color: #f44336 !important;
+}
+
+// Dark mode styles for linear progress
+.body--dark .q-linear-progress {
+  background-color: #444444 !important;
+}
+
+// Dark mode styles for tooltips
+.body--dark .q-tooltip {
+  background-color: #2d2d2d !important;
+  color: #ffffff !important;
+}
+
+// Dark mode styles for notifications
+.body--dark .q-notification {
+  background-color: #2d2d2d !important;
+  color: #ffffff !important;
+}
+
+// Dark mode styles for forms
+.body--dark .q-form {
+  color: #ffffff !important;
+}
+
+// Dark mode styles for links
+.body--dark a {
+  color: #64b5f6 !important;
+}
+
+.body--dark .text-primary {
+  color: #64b5f6 !important;
+}
+
+// Dark mode styles for page container
+.body--dark .q-page-container {
+  background-color: #1a1a1a !important;
+}
+
+// Dark mode styles for notifications menu
+.body--dark .notification-menu .q-card {
+  background-color: #2d2d2d !important;
+  border: 1px solid #444444 !important;
+}
+
+.body--dark .notification-menu .q-item {
+  color: #ffffff !important;
+}
+
+.body--dark .notification-menu .q-item-label {
+  color: #ffffff !important;
+}
+
+.body--dark .notification-menu .q-item-label--caption {
+  color: #cccccc !important;
+}
+
+.body--dark .notification-menu .bg-blue-1 {
+  background-color: rgba(25, 118, 210, 0.1) !important;
+}
+
+.body--dark .notification-menu .q-separator {
+  background-color: #444444 !important;
+}
+
+.body--dark .notification-menu .text-grey-6 {
+  color: #aaaaaa !important;
 }
 
 // Botão de toggle do modo escuro

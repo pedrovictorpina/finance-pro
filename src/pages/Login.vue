@@ -145,8 +145,7 @@ function loadSavedCredentials() {
     email.value = savedEmail
     password.value = savedPassword
     rememberMe.value = true
-    // Auto-login se as credenciais estão salvas
-    void signIn()
+    // Removido auto-login - usuário deve clicar manualmente
   }
 }
 
