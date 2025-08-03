@@ -1,0 +1,224 @@
+// app global css in SCSS form
+
+// Estilos globais para modo escuro
+body.body--dark {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+// Transições suaves para mudança de tema
+* {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+// Melhorar contraste em modo escuro
+.body--dark .q-card {
+  background-color: #1e1e1e;
+  color: #ffffff;
+  border: 1px solid #333;
+}
+
+.body--dark .q-input {
+  color: #ffffff !important;
+}
+
+.body--dark .q-field__control {
+  color: #ffffff !important;
+  background-color: #2a2a2a !important;
+}
+
+.body--dark .q-field__label {
+  color: #b0b0b0 !important;
+}
+
+.body--dark .q-field__control:before {
+  border-color: #555 !important;
+}
+
+.body--dark .q-field__control:after {
+  border-color: #bb86fc !important;
+}
+
+// Inputs específicos para login/signup
+.body--dark .custom-input .q-field__control {
+  background-color: #2a2a2a !important;
+  color: #ffffff !important;
+}
+
+.body--dark .custom-input input {
+  color: #ffffff !important;
+}
+
+// Páginas de login e cadastro em modo escuro
+.body--dark .login-page,
+.body--dark .signup-page {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%) !important;
+}
+
+.body--dark .login-card,
+.body--dark .signup-card {
+  background-color: #1e1e1e !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+// Forçar estilos específicos para login em modo escuro
+.body--dark .login-container {
+  color: #ffffff !important;
+}
+
+.body--dark .login-container .text-h3 {
+  color: #ffffff !important;
+}
+
+.body--dark .login-container .text-subtitle1 {
+  color: #b0b0b0 !important;
+}
+
+.body--dark .login-container .text-h5 {
+  color: #ffffff !important;
+}
+
+// Botões em modo escuro
+.body--dark .q-btn {
+  color: #ffffff;
+}
+
+.body--dark .q-btn.bg-primary {
+  background-color: #bb86fc !important;
+}
+
+// Links em modo escuro
+.body--dark .text-primary {
+  color: #bb86fc !important;
+}
+
+.body--dark a {
+  color: #bb86fc !important;
+}
+
+// Ícones em modo escuro
+.body--dark .q-icon {
+  color: #ffffff !important;
+}
+
+// Checkbox em modo escuro
+.body--dark .q-checkbox {
+  color: #ffffff !important;
+}
+
+.body--dark .q-checkbox__label {
+  color: #ffffff !important;
+}
+
+.body--dark .q-checkbox__inner {
+  color: #bb86fc !important;
+}
+
+// Texto em modo escuro
+.body--dark .text-grey-8 {
+  color: #ffffff !important;
+}
+
+.body--dark .text-grey-6 {
+  color: #b0b0b0 !important;
+}
+
+// Botão de toggle do modo escuro
+.dark-mode-toggle {
+  transition: transform 0.2s ease;
+}
+
+.dark-mode-toggle:hover {
+  transform: scale(1.1);
+}
+
+// Drawer em modo escuro
+.body--dark .q-drawer {
+  background-color: #1e1e1e !important;
+  border-right: 1px solid #333 !important;
+}
+
+.body--dark .q-drawer .bg-grey-1 {
+  background-color: #1e1e1e !important;
+}
+
+.body--dark .q-item {
+  color: #ffffff !important;
+}
+
+.body--dark .q-item:hover {
+  background-color: #333 !important;
+}
+
+.body--dark .q-item__label {
+  color: #ffffff !important;
+}
+
+.body--dark .q-item__label--caption {
+  color: #b0b0b0 !important;
+}
+
+.body--dark .q-separator {
+  background-color: #333 !important;
+}
+
+.body--dark .q-list {
+  background-color: transparent !important;
+}
+
+// Ícones do drawer em modo escuro
+.body--dark .q-drawer .q-icon {
+  color: #ffffff !important;
+}
+
+// Item ativo do drawer em modo escuro
+.body--dark .q-item.bg-primary {
+  background-color: #bb86fc !important;
+  color: #000000 !important;
+}
+
+.body--dark .q-item.bg-primary .q-icon {
+  color: #000000 !important;
+}
+
+.body--dark .q-item.bg-primary .q-item__label {
+  color: #000000 !important;
+}
+
+.body--dark .q-item.bg-primary .q-item__label--caption {
+  color: rgba(0, 0, 0, 0.7) !important;
+}
+
+// Header em modo escuro
+.body--dark .q-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+// Container do usuário no drawer em modo escuro
+.body--dark .q-drawer .bg-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.body--dark .q-drawer .bg-gradient-primary .text-h6 {
+  color: #ffffff !important;
+}
+
+.body--dark .q-drawer .bg-gradient-primary .text-caption {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+// Avatar no drawer em modo escuro
+.body--dark .q-drawer .q-avatar {
+  background-color: #ffffff !important;
+}
+
+.body--dark .q-drawer .q-avatar .q-icon {
+  color: #667eea !important;
+}
+
+// Posicionamento do botão de toggle nas páginas de login/signup
+.fixed-top-right {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+}
