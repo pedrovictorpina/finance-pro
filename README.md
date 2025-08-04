@@ -1,5 +1,7 @@
 # Finance Pro 💰
 
+<!-- Deploy test comment -->
+
 Um aplicativo moderno de gestão financeira pessoal desenvolvido com Vue.js, Quasar Framework e Supabase.
 
 ## 🚀 Funcionalidades
