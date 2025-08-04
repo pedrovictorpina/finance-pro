@@ -197,6 +197,37 @@
                 </q-input>
               </div>
 
+              <!-- Parcelamento -->
+              <div v-if="!isEditing && form.type === 'expense'">
+                <q-checkbox
+                  v-model="form.isInstallment"
+                  label="Compra parcelada"
+                  color="primary"
+                  class="q-mb-md"
+                  :disable="form.isRecurring"
+                />
+                <p class="text-caption text-grey-6 q-ma-none q-mb-md">
+                  Marque esta opção para dividir esta despesa em parcelas mensais
+                </p>
+                
+                <q-input
+                  v-if="form.isInstallment"
+                  v-model.number="form.totalInstallments"
+                  type="number"
+                  label="Número de parcelas"
+                  outlined
+                  :min="2"
+                  :max="60"
+                  :rules="[val => val >= 2 || 'Mínimo 2 parcelas', val => val <= 60 || 'Máximo 60 parcelas']"
+                  class="custom-input"
+                  hint="A despesa será dividida em parcelas iguais"
+                >
+                  <template #prepend>
+                    <q-icon name="credit_card" class="text-grey-6" />
+                  </template>
+                </q-input>
+              </div>
+
               <!-- Botões -->
               <div class="row q-gutter-md q-mt-lg">
                 <q-btn 
@@ -208,7 +239,7 @@
                   no-caps
                 />
                 <q-btn 
-                  :label="isEditing ? 'Atualizar Transação' : (form.isRecurring ? `Criar ${form.recurringMonths} Transações` : 'Salvar Transação')" 
+                  :label="isEditing ? 'Atualizar Transação' : (form.isRecurring ? `Criar ${form.recurringMonths} Transações` : (form.isInstallment ? `Criar ${form.totalInstallments} Parcelas` : 'Salvar Transação'))" 
                   color="primary" 
                   type="submit"
                   class="col"
@@ -228,7 +259,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'TransactionFormPage' })
 
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { supabase } from 'src/boot/supabase'
@@ -236,12 +267,28 @@ import { supabase } from 'src/boot/supabase'
 interface Account { id: number; name: string }
 interface Category { id: number; name: string; type?: string }
 
+interface TransactionForm {
+  date: string | undefined
+  amount: number | null
+  account_id: number | null
+  category_id: number | null
+  description: string
+  type: 'income' | 'expense'
+  due_date: string | undefined
+  is_paid: boolean
+  payment_date: string | null
+  isRecurring: boolean
+  recurringMonths: number
+  isInstallment: boolean
+  totalInstallments: number
+}
+
 const router = useRouter()
 const route = useRoute()
 const $q = useQuasar()
 const isEditing = computed(() => !!route.params.id)
 
-const form = ref({
+const form = ref<TransactionForm>({
   date: new Date().toISOString().split('T')[0], // Data atual como padrão
   amount: null as number | null,
   account_id: null as number | null,
@@ -252,11 +299,26 @@ const form = ref({
   is_paid: false,
   payment_date: null,
   isRecurring: false, // Recorrência ativada
-  recurringMonths: 12 // Número de meses para repetir
+  recurringMonths: 12, // Número de meses para repetir
+  isInstallment: false, // Compra parcelada
+  totalInstallments: 2 // Número de parcelas
 })
 const accounts = ref<Account[]>([])
 const categories = ref<Category[]>([])
 const loading = ref(false)
+
+// Watchers para garantir que recorrência e parcelamento sejam mutuamente exclusivos
+watch(() => form.value.isRecurring, (newVal) => {
+  if (newVal) {
+    form.value.isInstallment = false
+  }
+})
+
+watch(() => form.value.isInstallment, (newVal) => {
+  if (newVal) {
+    form.value.isRecurring = false
+  }
+})
 
 // Categorias filtradas baseadas no tipo de transação
 const filteredCategories = computed(() => {
@@ -355,6 +417,36 @@ const submit = async () => {
           }
           transactions.push(transactionData)
         }
+      } else if (form.value.isInstallment && form.value.type === 'expense') {
+        // Criar parcelas
+        const installmentGroupId = crypto.randomUUID()
+        const installmentAmount = baseAmount / form.value.totalInstallments
+        
+        for (let i = 0; i < form.value.totalInstallments; i++) {
+          const installmentDate = new Date(form.value.date || new Date().toISOString().split('T')[0] as string)
+          installmentDate.setMonth(installmentDate.getMonth() + i)
+          
+          const dueDate = new Date(form.value.due_date || installmentDate)
+          dueDate.setMonth(dueDate.getMonth() + i)
+          
+          const transactionData = {
+            user_id: session.user.id,
+            date: installmentDate.toISOString().split('T')[0],
+            amount: installmentAmount,
+            account_id: form.value.account_id,
+            category_id: form.value.category_id,
+            description: `${form.value.description} (${i + 1}/${form.value.totalInstallments})`,
+            type: form.value.type,
+            created_at: new Date().toISOString(),
+            due_date: dueDate.toISOString().split('T')[0],
+            is_paid: i === 0 ? form.value.is_paid : false, // Apenas a primeira parcela pode estar paga
+            payment_date: (i === 0 && form.value.is_paid) ? (form.value.payment_date || null) : null,
+            installment_number: i + 1,
+            total_installments: form.value.totalInstallments,
+            installment_group_id: installmentGroupId
+          }
+          transactions.push(transactionData)
+        }
       } else {
          // Criar transação única
          const transactionData = {
@@ -377,6 +469,8 @@ const submit = async () => {
          // Definir mensagem de sucesso para criação
          if (form.value.isRecurring) {
            message = `${transactions.length} transações recorrentes criadas com sucesso!`
+         } else if (form.value.isInstallment) {
+           message = `${transactions.length} parcelas criadas com sucesso!`
          }
        }
 
@@ -398,17 +492,19 @@ const submit = async () => {
 
     // Resetar formulário apenas se estiver criando nova transação
     form.value = {
-      date: new Date().toISOString().split('T')[0],
+      date: new Date().toISOString().split('T')[0] as string,
       amount: null,
       account_id: null,
       category_id: null,
       description: '',
       type: 'expense',
-      due_date: undefined,
+      due_date: new Date().toISOString().split('T')[0] as string,
       is_paid: false,
       payment_date: null,
       isRecurring: false,
-      recurringMonths: 12
+      recurringMonths: 12,
+      isInstallment: false,
+      totalInstallments: 2
     }
 
     // Redirecionar para o dashboard após 1 segundo
@@ -446,17 +542,19 @@ const loadTransaction = async () => {
     
     if (data) {
       form.value = {
-        date: data.date,
+        date: data.date as string,
         amount: Math.abs(data.amount),
         account_id: data.account_id,
         category_id: data.category_id,
         description: data.description || '',
         type: data.type,
-        due_date: data.due_date || data.date,
+        due_date: (data.due_date || data.date) as string,
         is_paid: data.is_paid || false,
         payment_date: data.payment_date || null,
         isRecurring: false,
-        recurringMonths: 12
+        recurringMonths: 12,
+        isInstallment: false,
+        totalInstallments: 2
       }
     }
   } catch (error) {

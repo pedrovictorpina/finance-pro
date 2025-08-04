@@ -267,6 +267,9 @@ interface Transaction {
   due_date?: string
   is_paid?: boolean
   payment_date?: string
+  installment_number?: number
+  total_installments?: number
+  installment_group_id?: string
 }
 
 interface Category {

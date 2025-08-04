@@ -633,7 +633,7 @@
     <q-dialog v-model="quickSummaryModalOpen" persistent>
       <q-card style="min-width: 500px">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">Resumo Financeiro Detalhado</div>
+          <div class="text-h6">Resumo Financeiro do Mês Atual</div>
           <q-space />
           <q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
@@ -644,7 +644,7 @@
               <q-card flat class="bg-positive text-white text-center">
                 <q-card-section>
                   <div class="text-h6">{{ formatCurrency(quickSummary.totalIncome) }}</div>
-                  <div class="text-caption">Total de Receitas</div>
+                  <div class="text-caption">Receitas do Mês</div>
                 </q-card-section>
               </q-card>
             </div>
@@ -652,7 +652,7 @@
               <q-card flat class="bg-negative text-white text-center">
                 <q-card-section>
                   <div class="text-h6">{{ formatCurrency(Math.abs(quickSummary.totalExpenses)) }}</div>
-                  <div class="text-caption">Total de Despesas</div>
+                  <div class="text-caption">Despesas do Mês</div>
                 </q-card-section>
               </q-card>
             </div>
@@ -663,14 +663,56 @@
               <q-card flat :class="quickSummary.totalBalance >= 0 ? 'bg-positive' : 'bg-negative'" class="text-white text-center">
                 <q-card-section>
                   <div class="text-h6">{{ formatCurrency(quickSummary.totalBalance) }}</div>
-                  <div class="text-caption">Saldo Total</div>
+                  <div class="text-caption">Saldo do Mês</div>
                 </q-card-section>
               </q-card>
             </div>
             <div class="col-6">
               <q-card flat class="bg-info text-white text-center">
                 <q-card-section>
-                  <div class="text-h6">{{ formatCurrency(quickSummary.savingsGoal) }}</div>
+                  <div v-if="!editingSavingsGoal" class="row items-center justify-center">
+                    <div class="text-h6">{{ formatCurrency(quickSummary.savingsGoal) }}</div>
+                    <q-btn 
+                      flat 
+                      round 
+                      dense 
+                      icon="edit" 
+                      size="sm" 
+                      class="q-ml-xs" 
+                      @click="startEditingSavingsGoal"
+                    />
+                  </div>
+                  <div v-else class="column q-gutter-xs">
+                    <q-input
+                      v-model.number="newSavingsGoal"
+                      type="number"
+                      min="1"
+                      step="100"
+                      dense
+                      filled
+                      dark
+                      prefix="R$"
+                      class="text-center"
+                    />
+                    <div class="row q-gutter-xs justify-center">
+                      <q-btn 
+                        flat 
+                        round 
+                        dense 
+                        icon="check" 
+                        size="sm" 
+                        @click="saveSavingsGoal"
+                      />
+                      <q-btn 
+                        flat 
+                        round 
+                        dense 
+                        icon="close" 
+                        size="sm" 
+                        @click="cancelEditingSavingsGoal"
+                      />
+                    </div>
+                  </div>
                   <div class="text-caption">Meta de Economia</div>
                 </q-card-section>
               </q-card>
@@ -863,6 +905,8 @@ interface Transaction {
   category?: { name: string }
   account?: { name: string }
   is_paid?: boolean
+  payment_date?: string
+  due_date?: string
 }
 
 interface SupabaseTransaction {
@@ -872,6 +916,8 @@ interface SupabaseTransaction {
   date: string
   type: string
   is_paid?: boolean
+  payment_date?: string
+  due_date?: string
   category: { name: string }[] | null
   account: { name: string }[] | null
 }
@@ -923,6 +969,8 @@ const calendarModalOpen = ref(false)
 const quickSummaryModalOpen = ref(false)
 const upcomingExpensesModalOpen = ref(false)
 const expenseDetailModalOpen = ref(false)
+const editingSavingsGoal = ref(false)
+const newSavingsGoal = ref(5000)
 
 const selectedTransaction = ref<Transaction | null>(null)
 const selectedExpense = ref<Transaction | null>(null)
@@ -1018,7 +1066,11 @@ const filteredUpcomingExpenses = computed(() => {
     }
   }
   
-  return filtered.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  return filtered.sort((a, b) => {
+    const dateA = new Date(a.due_date || a.date).getTime()
+    const dateB = new Date(b.due_date || b.date).getTime()
+    return dateA - dateB
+  })
 })
 
 // Computed para transações filtradas
@@ -1035,7 +1087,34 @@ const filteredHistoryTransactions = computed(() => {
     filtered = filtered.filter(t => t.type === historyFilter.value.type.value)
   }
   
-  return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  return filtered.sort((a, b) => {
+    // Para receitas: usar payment_date se existir, senão usar date
+    // Para despesas: usar due_date se não foi paga, ou payment_date se foi paga
+    let dateA = null
+    let dateB = null
+    
+    if (a.type === 'income') {
+      dateA = a.payment_date || a.date
+    } else {
+      if (a.is_paid && a.payment_date) {
+        dateA = a.payment_date
+      } else {
+        dateA = a.due_date || a.date
+      }
+    }
+    
+    if (b.type === 'income') {
+      dateB = b.payment_date || b.date
+    } else {
+      if (b.is_paid && b.payment_date) {
+        dateB = b.payment_date
+      } else {
+        dateB = b.due_date || b.date
+      }
+    }
+    
+    return new Date(dateB).getTime() - new Date(dateA).getTime()
+  })
 })
 
 // Opções do calendário
@@ -1387,6 +1466,8 @@ async function loadTransactions() {
         date,
         type,
         is_paid,
+        payment_date,
+        due_date,
         category:categories(name),
         account:accounts(name)
       `)
@@ -1402,6 +1483,8 @@ async function loadTransactions() {
       date: item.date,
       type: item.type as 'income' | 'expense',
       is_paid: item.is_paid || false,
+      payment_date: item.payment_date || null,
+      due_date: item.due_date || null,
       category: item.category && item.category.length > 0 ? item.category[0] : undefined,
       account: item.account && item.account.length > 0 ? item.account[0] : undefined
     })) as Transaction[]
@@ -1440,11 +1523,28 @@ function calculateSummaries() {
   }
   
   allTransactions.value.forEach(transaction => {
-    const transactionDate = new Date(transaction.date + 'T00:00:00')
-    const amount = transaction.amount
+    // Para receitas: usar payment_date se existir, senão usar date
+    // Para despesas: só considerar se is_paid = true e usar payment_date
+    let effectiveDate = null
     
-    // Dia
-    if (transactionDate >= today) {
+    if (transaction.type === 'income') {
+      // Receitas: usar payment_date se existir, senão usar date
+      effectiveDate = transaction.payment_date || transaction.date
+    } else {
+      // Despesas: só considerar se foi paga (is_paid = true) e usar payment_date
+      if (transaction.is_paid && transaction.payment_date) {
+        effectiveDate = transaction.payment_date
+      }
+    }
+    
+    // Se não há data efetiva, pular esta transação
+    if (!effectiveDate) return
+    
+    const transactionDate = new Date(effectiveDate + 'T00:00:00')
+    const amount = Math.abs(transaction.amount)
+    
+    // Dia (hoje)
+    if (transactionDate.toDateString() === today.toDateString()) {
       summaryData.value.day.transactions++
       if (transaction.type === 'income') {
         summaryData.value.day.income += amount
@@ -1453,8 +1553,8 @@ function calculateSummaries() {
       }
     }
     
-    // Semana
-    if (transactionDate >= weekStart) {
+    // Semana (últimos 7 dias)
+    if (transactionDate >= weekStart && transactionDate <= today) {
       summaryData.value.week.transactions++
       if (transaction.type === 'income') {
         summaryData.value.week.income += amount
@@ -1463,8 +1563,9 @@ function calculateSummaries() {
       }
     }
     
-    // Mês
-    if (transactionDate >= monthStart) {
+    // Mês (todo o mês atual, não apenas até hoje)
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    if (transactionDate >= monthStart && transactionDate <= monthEnd) {
       summaryData.value.month.transactions++
       if (transaction.type === 'income') {
         summaryData.value.month.income += amount
@@ -1479,34 +1580,31 @@ function calculateSummaries() {
   summaryData.value.week.balance = summaryData.value.week.income - summaryData.value.week.expense
   summaryData.value.month.balance = summaryData.value.month.income - summaryData.value.month.expense
   
-  // Calcular resumo rápido
-  const totalIncome = allTransactions.value
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0)
-  
-  const totalExpenses = allTransactions.value
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0)
+  // Calcular resumo rápido (apenas mês atual)
+  const monthlyIncome = summaryData.value.month.income
+  const monthlyExpenses = summaryData.value.month.expense
+  const monthlyBalance = monthlyIncome - monthlyExpenses
   
   quickSummary.value = {
-    totalBalance: totalIncome - totalExpenses,
-    totalIncome,
-    totalExpenses,
-    monthExpenses: summaryData.value.month.expense,
-    savingsGoal: 5000,
-    savingsProgress: Math.min((totalIncome - totalExpenses) / 5000 * 100, 100)
+    totalBalance: monthlyBalance,
+    totalIncome: monthlyIncome,
+    totalExpenses: monthlyExpenses,
+    monthExpenses: monthlyExpenses,
+    savingsGoal: quickSummary.value.savingsGoal || 5000,
+    savingsProgress: quickSummary.value.savingsGoal > 0 ? Math.min(monthlyBalance / quickSummary.value.savingsGoal, 1) : 0
   }
 }
 
-// Função para gerar dados do gráfico de 12 meses
+// Função para gerar dados do gráfico de 12 meses (3 atrás + mês atual + 8 à frente)
 function generateChartData() {
   const now = new Date()
   const months = []
   const receitas = []
   const despesas = []
   
-  for (let i = 11; i >= 0; i--) {
-    const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+  // Gerar 12 meses: 3 meses atrás, mês atual, e 8 meses à frente
+  for (let i = -3; i <= 8; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth() + i, 1)
     const monthName = date.toLocaleDateString('pt-BR', { month: 'short' })
     months.push(monthName.charAt(0).toUpperCase() + monthName.slice(1))
     
@@ -1514,17 +1612,31 @@ function generateChartData() {
     const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0)
     
     const monthTransactions = allTransactions.value.filter(t => {
-      const transactionDate = new Date(t.date + 'T00:00:00')
+      // Para receitas: usar payment_date se existir, senão usar date
+      // Para despesas: só considerar se is_paid = true e usar payment_date
+      let effectiveDate = null
+      
+      if (t.type === 'income') {
+        effectiveDate = t.payment_date || t.date
+      } else {
+        if (t.is_paid && t.payment_date) {
+          effectiveDate = t.payment_date
+        }
+      }
+      
+      if (!effectiveDate) return false
+      
+      const transactionDate = new Date(effectiveDate + 'T00:00:00')
       return transactionDate >= monthStart && transactionDate <= monthEnd
     })
     
     const monthIncome = monthTransactions
       .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + t.amount, 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
     
     const monthExpense = monthTransactions
       .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0)
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
     
     receitas.push(monthIncome)
     despesas.push(monthExpense)
@@ -1540,7 +1652,23 @@ function generateCalendarEvents() {
   const events = new Set<string>()
   
   allTransactions.value.forEach(transaction => {
-    events.add(transaction.date)
+    // Para receitas: usar payment_date se existir, senão usar date
+    // Para despesas: usar due_date se não foi paga, ou payment_date se foi paga
+    let eventDate = null
+    
+    if (transaction.type === 'income') {
+      eventDate = transaction.payment_date || transaction.date
+    } else {
+      if (transaction.is_paid && transaction.payment_date) {
+        eventDate = transaction.payment_date
+      } else {
+        eventDate = transaction.due_date || transaction.date
+      }
+    }
+    
+    if (eventDate) {
+      events.add(eventDate)
+    }
   })
   
   calendarEvents.value = Array.from(events)
@@ -1553,11 +1681,14 @@ function loadUpcomingExpenses() {
   const currentYear = now.getFullYear()
   const today = new Date(currentYear, currentMonth, now.getDate())
   
-  // Filtrar despesas do mês atual que são futuras ou de hoje
+  // Filtrar despesas não pagas com vencimento no mês atual (hoje ou futuro)
   upcomingExpenses.value = allTransactions.value.filter(transaction => {
     if (transaction.type !== 'expense') return false
+    if (transaction.is_paid) return false // Não mostrar despesas já pagas
     
-    const transactionDate = new Date(transaction.date + 'T00:00:00')
+    // Usar due_date se existir, senão usar date
+    const dueDate = transaction.due_date || transaction.date
+    const transactionDate = new Date(dueDate + 'T00:00:00')
     const transactionMonth = transactionDate.getMonth()
     const transactionYear = transactionDate.getFullYear()
     
@@ -1566,8 +1697,10 @@ function loadUpcomingExpenses() {
            transactionYear === currentYear && 
            transactionDate >= today
   }).sort((a, b) => {
-    // Ordenar por data (mais próximas primeiro)
-    return new Date(a.date).getTime() - new Date(b.date).getTime()
+    // Ordenar por data de vencimento (mais próximas primeiro)
+    const dateA = new Date(a.due_date || a.date).getTime()
+    const dateB = new Date(b.due_date || b.date).getTime()
+    return dateA - dateB
   })
 }
 
@@ -1589,7 +1722,21 @@ function openSummaryModal(period: 'day' | 'week' | 'month') {
   }
   
   summaryModalTransactions.value = allTransactions.value.filter(t => {
-    const transactionDate = new Date(t.date + 'T00:00:00')
+    // Para receitas: usar payment_date se existir, senão usar date
+    // Para despesas: só considerar se is_paid = true e usar payment_date
+    let effectiveDate = null
+    
+    if (t.type === 'income') {
+      effectiveDate = t.payment_date || t.date
+    } else {
+      if (t.is_paid && t.payment_date) {
+        effectiveDate = t.payment_date
+      }
+    }
+    
+    if (!effectiveDate) return false
+    
+    const transactionDate = new Date(effectiveDate + 'T00:00:00')
     return transactionDate >= startDate
   })
   
@@ -1618,6 +1765,37 @@ function openCalendarModal() {
 
 function openQuickSummaryModal() {
   quickSummaryModalOpen.value = true
+}
+
+function startEditingSavingsGoal() {
+  newSavingsGoal.value = quickSummary.value.savingsGoal
+  editingSavingsGoal.value = true
+}
+
+function cancelEditingSavingsGoal() {
+  editingSavingsGoal.value = false
+  newSavingsGoal.value = quickSummary.value.savingsGoal
+}
+
+function saveSavingsGoal() {
+  if (newSavingsGoal.value > 0) {
+    quickSummary.value.savingsGoal = newSavingsGoal.value
+    quickSummary.value.savingsProgress = quickSummary.value.savingsGoal > 0 ? 
+      Math.min(quickSummary.value.totalBalance / quickSummary.value.savingsGoal, 1) : 0
+    editingSavingsGoal.value = false
+    
+    $q.notify({
+      type: 'positive',
+      message: 'Meta de economia atualizada com sucesso!',
+      position: 'top'
+    })
+  } else {
+    $q.notify({
+      type: 'negative',
+      message: 'A meta deve ser maior que zero',
+      position: 'top'
+    })
+  }
 }
 
 // Funções para próximas despesas
@@ -1684,7 +1862,23 @@ function editExpense() {
 
 function onDateClick(date: string) {
   selectedDate.value = date
-  selectedDateTransactions.value = allTransactions.value.filter(t => t.date === date)
+  selectedDateTransactions.value = allTransactions.value.filter(t => {
+    // Para receitas: usar payment_date se existir, senão usar date
+    // Para despesas: usar due_date se não foi paga, ou payment_date se foi paga
+    let eventDate = null
+    
+    if (t.type === 'income') {
+      eventDate = t.payment_date || t.date
+    } else {
+      if (t.is_paid && t.payment_date) {
+        eventDate = t.payment_date
+      } else {
+        eventDate = t.due_date || t.date
+      }
+    }
+    
+    return eventDate === date
+  })
 }
 
 function editTransaction() {
