@@ -44,8 +44,8 @@ Para o deploy automático funcionar, configure os seguintes secrets no GitHub:
 VITE_SUPABASE_URL=sua_url_do_supabase
 VITE_SUPABASE_ANON_KEY=sua_chave_anonima_do_supabase
 VERCEL_TOKEN=seu_token_do_vercel
-ORG_ID=id_da_organizacao_vercel
-PROJECT_ID=id_do_projeto_vercel
+VERCEL_ORG_ID=id_da_organizacao_vercel
+VERCEL_PROJECT_ID=id_do_projeto_vercel
 ```
 
 #### Como obter os tokens do Vercel:
@@ -55,7 +55,7 @@ PROJECT_ID=id_do_projeto_vercel
 2. Crie um novo token
 3. Copie o token gerado
 
-**ORG_ID e PROJECT_ID:**
+**VERCEL_ORG_ID e VERCEL_PROJECT_ID:**
 1. No terminal, instale a CLI do Vercel: `npm i -g vercel`
 2. Execute: `vercel link`
 3. Siga as instruções para conectar o projeto
